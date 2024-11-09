@@ -1,0 +1,210 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Audio Streaming</title>
+    
+    <!-- Embedded CSS for Styling -->
+    <style>
+        /* Reset some default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #4a90e2;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px; /* Reduced margin to accommodate status */
+        }
+
+        button {
+            padding: 15px 25px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            color: #fff;
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        #broadcastBtn {
+            background-color: #4CAF50;
+        }
+
+        #broadcastBtn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        #listenBtn {
+            background-color: #2196F3;
+        }
+
+        #listenBtn:hover {
+            background-color: #0b7dda;
+            transform: translateY(-2px);
+        }
+
+        #stopBtn {
+            background-color: #f44336;
+        }
+
+        #stopBtn:hover {
+            background-color: #da190b;
+            transform: translateY(-2px);
+        }
+
+        #status {
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            color: #555;
+        }
+
+        .visualizer {
+            width: 80%;
+            max-width: 800px;
+            height: 200px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        footer {
+            margin-top: 40px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .visualizer {
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎤 Real-Time Audio Stream</h1>
+        <p>Broadcast your voice live or listen to others!</p>
+    </header>
+
+    <div class="controls">
+        <button id="broadcastBtn">🔊 Broadcast</button>
+        <button id="listenBtn">👂 Listen</button>
+        <button id="stopBtn" disabled>⏹️ Stop</button>
+    </div>
+
+    <!-- Status Display -->
+    <div id="status">Disconnected.</div>
+
+    <div class="visualizer">
+        <canvas id="soundwave"></canvas>
+    </div>
+
+    <!-- Test Audio Element for Debugging -->
+    <audio id="testAudio" controls></audio>
+
+    <footer>
+        <p>&copy; 2024 Your Company Name. All rights reserved.</p>
+    </footer>
+
+    <!-- Link to the JavaScript file in the static folder with cache-busting -->
+    <script src="/static/js/index.js?v={{ timestamp }}"></script>
+
+    <!-- Embedded JavaScript for Soundwave Visualization -->
+    <script>
+        // Ensure the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('soundwave');
+            const ctx = canvas.getContext('2d');
+
+            // Resize the canvas to fit its container
+            function resizeCanvas() {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // Function to draw the soundwave
+            function drawWaveform(dataArray) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#4a90e2';
+                ctx.beginPath();
+
+                const sliceWidth = canvas.width * 1.0 / dataArray.length;
+                let x = 0;
+
+                for(let i = 0; i < dataArray.length; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * canvas.height / 2;
+
+                    if(i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+
+                    x += sliceWidth;
+                }
+
+                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.stroke();
+            }
+
+            // Expose the drawWaveform function to be used in index.js
+            window.drawWaveform = drawWaveform;
+        });
+    </script>
+</body>
+</html>
